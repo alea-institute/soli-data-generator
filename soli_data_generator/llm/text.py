@@ -12,7 +12,10 @@ from alea_llm_client.llms import BaseAIModel
 from soli import SOLI
 
 # project
-from soli_data_generator.procedural.template import TemplateFormatter
+from soli_data_generator.procedural.template import (
+    TemplateFormatter,
+    get_random_owl_label,
+)
 
 # constants
 TEXT_UNITS = ["paragraph(s)", "sentence(s)"]
@@ -106,7 +109,7 @@ def get_random_background(
         background_template += f"{TYPE_LABEL[tag]}: <|{tag}|>\n"
 
     # add document type directly
-    background_template += f"Document Type: {document_type}\n"
+    background_template += f"Document Type: {get_random_owl_label(document_type)}\n"
 
     # format it
     t = TemplateFormatter()
