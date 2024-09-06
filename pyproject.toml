@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "soli-data-generator"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python library for SOLI data generation"
 authors = ["ALEA Institute <hello@aleainstitute.ai>"]
 license = "MIT"

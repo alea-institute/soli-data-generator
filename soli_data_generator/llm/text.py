@@ -59,7 +59,7 @@ PROCEDURAL_TYPES = [
     "location",
     "name",
     "objectives",
-    "services",
+    "service",
 ]
 
 TYPE_LABEL = {
@@ -76,7 +76,7 @@ TYPE_LABEL = {
     "location": "Location",
     "name": "Name",
     "objectives": "Objectives",
-    "services": "Services",
+    "service": "Services",
 }
 
 

@@ -15,6 +15,7 @@ def test_vllm():
     for _ in range(5):
         text = generator()
         assert isinstance(text, str)
+        assert "<|" not in text
         assert len(text) > 0
 
 
@@ -24,6 +25,7 @@ def test_openai():
     for _ in range(5):
         text = generator()
         assert isinstance(text, str)
+        assert "<|" not in text
         assert len(text) > 0
 
 
@@ -33,4 +35,5 @@ def test_anthropic():
     for _ in range(5):
         text = generator()
         assert isinstance(text, str)
+        assert "<|" not in text
         assert len(text) > 0
