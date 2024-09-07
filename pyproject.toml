@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "soli-data-generator"
-version = "0.1.1"
+version = "0.1.2"
 description = "Python library for SOLI data generation"
 authors = ["ALEA Institute <hello@aleainstitute.ai>"]
 license = "MIT"
@@ -65,6 +65,9 @@ marisa-trie = "^1.2.0"
 # extras
 [tool.poetry.extras]
 search = ["rapidfuzz", "marisa-trie"]
+
+[tool.poetry.scripts]
+soli-data-generator = "soli_data_generator.cli.generate:main"
 
 
 [build-system]

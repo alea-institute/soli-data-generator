@@ -4,9 +4,7 @@
 from alea_llm_client import VLLMModel, AnthropicModel, OpenAIModel
 
 # project
-from soli_data_generator.llm.text import TextGenerator
-
-# model fixture
+from soli_data_generator import TextGenerator
 
 
 def test_vllm():

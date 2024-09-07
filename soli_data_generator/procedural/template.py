@@ -9,8 +9,8 @@ Examples:
  - The company has multiple business lines, including both <|industry:1|> and <|industry:2|> operations.
  - The experts who will be working on this matter include both <|name:1|> and <|name:2|>.
 
+# Valid SOLI tags
 
-Valid SOLI tags:
     actor_player
     area_of_law
     asset_type
@@ -35,18 +35,32 @@ Valid SOLI tags:
     standards_compatibility
     status
     system_identifiers
+
+# Valid Faker tags
+
+    address
+    amount
+    company
+    date
+    time
+    email
+    filename
+    first_name
+    last_name
+    name
+    job
+
 """
 
+# imports
 import random
 import re
-
-# imports
 from enum import Enum
 from typing import Any, Dict, Optional, Tuple
 
-from faker import Faker
 
 # packages
+from faker import Faker
 from soli import SOLI, OWLClass, SOLITypes
 
 # project
@@ -58,6 +72,7 @@ class FakerTag(Enum):
     """
 
     ADDRESS = "address"
+    AMOUNT = "amount"
     COMPANY = "company"
     DATE = "date"
     TIME = "time"
@@ -71,8 +86,10 @@ class FakerTag(Enum):
 
 # TODO: decide where/how we want to set seed
 # TODO: decide if we want to switch to numpy RNG
-
 # TODO: enhanced configuration for this
+
+
+# set up Faker instance
 FAKER_INSTANCE = Faker()
 
 
@@ -93,6 +110,18 @@ def normalize_soli_tag(tag: str) -> str:
     return re.sub(r"[_\W]+", "_", tag.strip().lower())
 
 
+def get_all_tags() -> list[str]:
+    """
+    Get all SOLI tags and Faker methods.
+
+    Returns:
+    - list: the list of all SOLI tags and Faker methods
+    """
+    return [normalize_soli_tag(tag.value) for tag in SOLITypes] + [
+        tag.value for tag in FakerTag
+    ]
+
+
 def build_regex_pattern():
     """
     Combine all SOLI taxonomic categories and Faker methods into a single regex pattern for matching SOLI tags.
@@ -105,12 +134,10 @@ def build_regex_pattern():
     Returns:
     - str: the regex pattern for matching SOLI tags
     """
-    # get each tag set
-    soli_tags = "|".join([normalize_soli_tag(tag.value) for tag in SOLITypes])
-    faker_tags = "|".join([tag.value for tag in FakerTag])
-
+    # combine all tags with pipe
+    all_tags = "|".join(get_all_tags())
     # create a regex that will match any of the tags, with optional index or count
-    return rf"<\|(?P<tag>{soli_tags}|{faker_tags})(?::(?P<index>[0-9]+|[a-z]))?\|>"
+    return rf"<\|(?P<tag>{all_tags})(?::(?P<index>[0-9]+|[a-z]))?\|>"
 
 
 # compiled pattern mapper
@@ -198,6 +225,10 @@ def sample_values(
         # Faker sampling
         if tag == "address":
             value_map[(tag, index)] = FAKER_INSTANCE.address()
+        elif tag == "amount":
+            value_map[(tag, index)] = FAKER_INSTANCE.random_number(
+                digits=random.randint(1, 5)
+            )
         elif tag == "company":
             value_map[(tag, index)] = FAKER_INSTANCE.company()
         elif tag == "date":
@@ -307,11 +338,249 @@ def sample_values(
     return value_map
 
 
+def sample_value_details(
+    pattern_map: Dict[Tuple[str, str], Any],
+    soli_graph: SOLI,
+) -> Dict[Tuple[str, str], Dict]:
+    """
+    Sample values for each SOLI taxonomic category or Faker method in the pattern map with additional details.
+
+    Args:
+    - pattern_map (dict): the mapping of SOLI tags to their corresponding taxonomic categories or Faker methods
+    - soli_graph (SOLI): the SOLI knowledge graph
+
+    Returns:
+    - dict: the mapping of SOLI tags to their corresponding sampled values with additional details
+    """
+    value_map = {}
+    for tag, index in pattern_map.keys():
+        # Faker sampling
+        if tag == "address":
+            value_map[(tag, index)] = {
+                "value": FAKER_INSTANCE.address(),
+                "owl_class": None,
+            }
+        elif tag == "amount":
+            value_map[(tag, index)] = {
+                "value": FAKER_INSTANCE.random_number(digits=random.randint(1, 5)),
+                "owl_class": None,
+            }
+        elif tag == "company":
+            value_map[(tag, index)] = {
+                "value": FAKER_INSTANCE.company(),
+                "owl_class": soli_graph["R7oBWHStfmqTLn2MypkW3Pj"],
+            }
+        elif tag == "date":
+            date_type = random.choice(["past", "future", "decade"])
+            if date_type == "past":
+                value_map[(tag, index)] = {
+                    "value": FAKER_INSTANCE.past_date(),
+                    "owl_class": soli_graph["R7sBKqCcmlK1Dw9HBvKenYy"],
+                }
+            elif date_type == "future":
+                value_map[(tag, index)] = {
+                    "value": FAKER_INSTANCE.future_date(),
+                    "owl_class": soli_graph["R7sBKqCcmlK1Dw9HBvKenYy"],
+                }
+            elif date_type == "decade":
+                value_map[(tag, index)] = {
+                    "value": FAKER_INSTANCE.date_this_decade(),
+                    "owl_class": soli_graph["R7sBKqCcmlK1Dw9HBvKenYy"],
+                }
+        elif tag == "time":
+            value_map[(tag, index)] = {
+                "value": FAKER_INSTANCE.time(),
+                "owl_class": None,
+            }
+        elif tag == "email":
+            value_map[(tag, index)] = {
+                "value": FAKER_INSTANCE.email(),
+                "owl_class": None,
+            }
+        elif tag == "filename":
+            value_map[(tag, index)] = {
+                "value": FAKER_INSTANCE.file_name(),
+                "owl_class": None,
+            }
+        elif tag == "first_name":
+            value_map[(tag, index)] = {
+                "value": FAKER_INSTANCE.first_name(),
+                "owl_class": None,
+            }
+        elif tag == "last_name":
+            value_map[(tag, index)] = {
+                "value": FAKER_INSTANCE.last_name(),
+                "owl_class": None,
+            }
+        elif tag == "name":
+            value_map[(tag, index)] = {
+                "value": FAKER_INSTANCE.name(),
+                "owl_class": None,
+            }
+        elif tag == "job":
+            value_map[(tag, index)] = {"value": FAKER_INSTANCE.job(), "owl_class": None}
+        # SOLI sampling
+        elif tag == "actor_player":
+            sampled_class: OWLClass = random.choice(soli_graph.get_player_actors())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "area_of_law":
+            sampled_class: OWLClass = random.choice(soli_graph.get_areas_of_law())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "asset_type":
+            sampled_class: OWLClass = random.choice(soli_graph.get_asset_types())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "communication_modality":
+            sampled_class: OWLClass = random.choice(
+                soli_graph.get_communication_modalities()
+            )
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "currency":
+            sampled_class: OWLClass = random.choice(soli_graph.get_currencies())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "data_format":
+            sampled_class: OWLClass = random.choice(soli_graph.get_data_formats())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "document_artifact":
+            sampled_class: OWLClass = random.choice(soli_graph.get_document_artifacts())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "engagement_terms":
+            sampled_class: OWLClass = random.choice(soli_graph.get_engagement_terms())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "event":
+            sampled_class: OWLClass = random.choice(soli_graph.get_events())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "forums_and_venues":
+            sampled_class: OWLClass = random.choice(soli_graph.get_forum_venues())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "governmental_body":
+            sampled_class: OWLClass = random.choice(
+                soli_graph.get_governmental_bodies()
+            )
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "industry":
+            sampled_class: OWLClass = random.choice(soli_graph.get_industries())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "language":
+            sampled_class: OWLClass = random.choice(soli_graph.get_languages())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "soli_type":
+            sampled_class: OWLClass = random.choice(soli_graph.get_soli_types())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "legal_authorities":
+            sampled_class: OWLClass = random.choice(soli_graph.get_legal_authorities())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "legal_entity":
+            sampled_class: OWLClass = random.choice(soli_graph.get_legal_entities())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "location":
+            sampled_class: OWLClass = random.choice(soli_graph.get_locations())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "matter_narrative":
+            sampled_class: OWLClass = random.choice(soli_graph.get_matter_narratives())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "matter_narrative_format":
+            sampled_class: OWLClass = random.choice(
+                soli_graph.get_matter_narrative_formats()
+            )
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "objectives":
+            sampled_class: OWLClass = random.choice(soli_graph.get_objectives())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "service":
+            sampled_class: OWLClass = random.choice(soli_graph.get_services())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "standards_compatibility":
+            sampled_class: OWLClass = random.choice(
+                soli_graph.get_standards_compatibilities()
+            )
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "status":
+            sampled_class: OWLClass = random.choice(soli_graph.get_statuses())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+        elif tag == "system_identifiers":
+            sampled_class: OWLClass = random.choice(soli_graph.get_system_identifiers())
+            value_map[(tag, index)] = {
+                "value": get_random_owl_label(sampled_class),
+                "owl_class": sampled_class,
+            }
+
+    return value_map
+
+
 def apply_template_map(
     template: str, value_map: Dict[Tuple[str, str], int | float | str]
 ) -> str:
     """
-    Apply a mapping of SOLI tags to their corresponding taxonomic categories or Faker methods to a template.
+    Apply a mapping of SOLI/Faker tags to their corresponding taxonomic categories or Faker methods to a template.
 
     Args:
     - template (str): the template string containing SOLI tags
@@ -329,6 +598,51 @@ def apply_template_map(
         template_output = template_output.replace(template_tag, str(value))
 
     return template_output
+
+
+def apply_template_map_spans(
+    template: str,
+    value_map: Dict[Tuple[str, str], Dict],
+    pattern: re.Pattern = RE_PATTERN_MAP,
+) -> dict:
+    """
+    Apply a mapping of SOLI/Faker tags to a template with the corresponding span annotations for each tag.
+
+    Args:
+    - template (str): the template string containing SOLI tags
+    - value_map (dict): the mapping of SOLI tags to their corresponding values and OWL classes
+
+    Returns:
+    - dict: the template with the SOLI tags replaced by their corresponding values with span annotations
+    """
+
+    # Implement this way in case we end up using non-sequential
+    # processing/transform steps later.
+    output_text = template
+    spans = []
+    try:
+        while match := next(pattern.finditer(output_text)):
+            start_pos = match.start()
+            end_pos = match.end()
+            tag = match.group("tag")  # type: ignore
+            index = match.group("index")  # type: ignore
+            value_info = value_map.get((tag, index))
+            value = str(value_info["value"])
+            owl_class = value_info.get("owl_class")
+            output_text = output_text[:start_pos] + value + output_text[end_pos:]
+            spans.append(
+                {
+                    "start": start_pos,
+                    "end": start_pos + len(value),
+                    "tag": tag,
+                    "value": value,
+                    "owl_class": owl_class,
+                }
+            )
+    except StopIteration:
+        pass
+
+    return {"text": output_text, "spans": spans}
 
 
 def format_template(
@@ -352,6 +666,29 @@ def format_template(
 
     # apply the value map to the template
     return apply_template_map(template, value_map)
+
+
+def format_template_spans(
+    template: str,
+    soli_graph: SOLI,
+) -> dict:
+    """
+    Format a template string by sampling values for each SOLI taxonomic category or Faker method with span annotations.
+
+    Args:
+    - template (str): the template string containing SOLI tags
+
+    Returns:
+    - dict: the formatted template with the SOLI tags replaced by their corresponding taxonomic categories or Faker methods with span annotations
+    """
+    # build a pattern map from the template
+    pattern_map = build_pattern_map(template)
+
+    # sample values for each tag
+    value_map = sample_value_details(pattern_map, soli_graph)
+
+    # apply the value map to the template
+    return apply_template_map_spans(template, value_map)
 
 
 # class-based version for easier SOLI graph setup
@@ -412,6 +749,25 @@ class TemplateFormatter:
 
         # apply the value map to the template
         return apply_template_map(template=template, value_map=value_map)
+
+    def format_spans(self, template: str) -> dict:
+        """
+        Format a template string by sampling values for each SOLI taxonomic category or Faker method with span annotations.
+
+        Args:
+        - template (str): the template string containing SOLI tags
+
+        Returns:
+        - dict: the formatted template with the SOLI tags replaced by their corresponding taxonomic categories or Faker methods with span annotations
+        """
+        # build a pattern map from the template
+        pattern_map = build_pattern_map(template=template, pattern=self.pattern)
+
+        # sample values for each tag
+        value_map = sample_value_details(pattern_map=pattern_map, soli_graph=self.graph)
+
+        # apply the value map to the template
+        return apply_template_map_spans(template=template, value_map=value_map)
 
     def __call__(self, *args, **kwargs):
         """
