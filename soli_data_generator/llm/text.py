@@ -6,9 +6,8 @@ Generate text from a context based on SOLI or Faker entities.
 import random
 from typing import Optional
 
-from alea_llm_client.llms import BaseAIModel
-
 # packages
+from alea_llm_client.llms import BaseAIModel
 from soli import SOLI
 
 # project
